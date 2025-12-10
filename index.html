@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Controle Financeiro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc2a0;
+            --danger-color: #e63946;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --gray-color: #6c757d;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --border-radius: 10px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark-color);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+        
+        h1 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: var(--gray-color);
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+        
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-title i {
+            margin-right: 10px;
+            color: var(--accent-color);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 194, 160, 0.2);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+        
+        .btn-accent:hover {
+            background-color: #3da88a;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #c1121f;
+        }
+        
+        .btn-full {
+            width: 100%;
+        }
+        
+        .expenses-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e1e5eb;
+            transition: background-color 0.2s;
+        }
+        
+        .expense-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .expense-info {
+            flex-grow: 1;
+        }
+        
+        .expense-category {
+            font-weight: 600;
+            color: var(--secondary-color);
+            font-size: 1.1rem;
+        }
+        
+        .expense-description {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .expense-amount {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--danger-color);
+        }
+        
+        .expense-date {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-top: 5px;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 15px;
+            transition: color 0.2s;
+        }
+        
+        .delete-btn:hover {
+            color: #c1121f;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray-color);
+            margin-top: 5px;
+        }
+        
+        .total-expenses {
+            color: var(--danger-color);
+        }
+        
+        .export-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5eb;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray-color);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #e1e5eb;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+        
+        .category-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .category-lanche { background-color: #ffeaa7; color: #d35400; }
+        .category-supermercado { background-color: #a29bfe; color: #2d3436; }
+        .category-restaurante { background-color: #fab1a0; color: #d63031; }
+        .category-transporte { background-color: #81ecec; color: #00cec9; }
+        .category-cuidados { background-color: #fd79a8; color: #a51c5d; }
+        .category-saude { background-color: #55efc4; color: #00b894; }
+        .category-entretenimento { background-color: #74b9ff; color: #0984e3; }
+        .category-outros { background-color: #dfe6e9; color: #636e72; }
+        
+        .category-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .category-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .category-option {
+            padding: 12px;
+            text-align: center;
+            border: 2px solid #e1e5eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .category-option:hover {
+            border-color: var(--accent-color);
+            background-color: rgba(79, 194, 160, 0.1);
+        }
+        
+        .category-option.selected {
+            border-color: var(--accent-color);
+            background-color: rgba(79, 194, 160, 0.2);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.5s;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-wallet"></i> Meu Controle Financeiro</h1>
+            <p class="subtitle">Acompanhe todos os seus gastos de forma simples e organizada</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-column">
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-plus-circle"></i> Novo Gasto</h2>
+                    
+                    <div class="form-group">
+                        <label for="amount">Valor (R$)</label>
+                        <input type="number" id="amount" min="0.01" step="0.01" placeholder="Ex: 10.50">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Descrição (opcional)</label>
+                        <input type="text" id="description" placeholder="Ex: Coxinha no mercado">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <div class="category-selector" id="categorySelector">
+                            <!-- As categorias serão preenchidas via JavaScript -->
+                        </div>
+                        <select id="categorySelect" class="hidden">
+                            <!-- As opções serão preenchidas via JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-accent btn-full" id="addExpense">
+                        <i class="fas fa-save"></i> Adicionar Gasto
+                    </button>
+                    
+                    <div class="stats">
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalExpenses">R$ 0,00</div>
+                            <div class="stat-label">Total Gasto</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="expensesCount">0</div>
+                            <div class="stat-label">Registros</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="avgExpense">R$ 0,00</div>
+                            <div class="stat-label">Média por Gasto</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-chart-pie"></i> Resumo por Categoria</h2>
+                    <div id="categorySummary">
+                        <!-- O resumo será preenchido via JavaScript -->
+                        <div class="empty-state">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>Adicione gastos para ver o resumo por categoria</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-column">
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-history"></i> Últimos Gastos</h2>
+                    <div class="expenses-list" id="expensesList">
+                        <div class="empty-state">
+                            <i class="fas fa-receipt"></i>
+                            <p>Nenhum gasto registrado ainda</p>
+                            <p>Adicione seu primeiro gasto usando o formulário ao lado</p>
+                        </div>
+                    </div>
+                    
+                    <div class="export-section">
+                        <button class="btn" id="clearData">
+                            <i class="fas fa-trash-alt"></i> Limpar Dados
+                        </button>
+                        <button class="btn btn-accent" id="exportData">
+                            <i class="fas fa-file-excel"></i> Exportar para Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Sistema de Controle Financeiro Pessoal | Desenvolvido para acesso via GitHub Pages</p>
+            <p>Seus dados são salvos localmente no seu navegador</p>
+        </footer>
+    </div>
+    
+    <div class="notification" id="notification">
+        <span id="notificationText">Gasto adicionado com sucesso!</span>
+    </div>
+
+    <script>
+        // Categorias de gastos pré-definidas
+        const categories = [
+            { id: 'lanche', name: 'Lanche', icon: 'fas fa-hamburger', color: 'category-lanche' },
+            { id: 'supermercado', name: 'Supermercado', icon: 'fas fa-shopping-cart', color: 'category-supermercado' },
+            { id: 'restaurante', name: 'Restaurante', icon: 'fas fa-utensils', color: 'category-restaurante' },
+            { id: 'transporte', name: 'Transporte', icon: 'fas fa-bus', color: 'category-transporte' },
+            { id: 'uber', name: 'Uber/Táxi', icon: 'fas fa-taxi', color: 'category-transporte' },
+            { id: 'transporte-publico', name: 'Transporte Público', icon: 'fas fa-subway', color: 'category-transporte' },
+            { id: 'corte-cabelo', name: 'Corte de Cabelo', icon: 'fas fa-cut', color: 'category-cuidados' },
+            { id: 'academia', name: 'Academia', icon: 'fas fa-dumbbell', color: 'category-saude' },
+            { id: 'suplementos', name: 'Suplementos', icon: 'fas fa-capsules', color: 'category-saude' },
+            { id: 'bebidas', name: 'Bebidas', icon: 'fas fa-wine-glass-alt', color: 'category-lanche' },
+            { id: 'ifood', name: 'Ifood', icon: 'fas fa-motorcycle', color: 'category-restaurante' },
+            { id: 'saude', name: 'Saúde', icon: 'fas fa-heartbeat', color: 'category-saude' },
+            { id: 'educacao', name: 'Educação', icon: 'fas fa-graduation-cap', color: 'category-outros' },
+            { id: 'lazer', name: 'Lazer', icon: 'fas fa-film', color: 'category-entretenimento' },
+            { id: 'vestuario', name: 'Vestuário', icon: 'fas fa-tshirt', color: 'category-outros' },
+            { id: 'viagem', name: 'Viagem', icon: 'fas fa-plane', color: 'category-outros' },
+            { id: 'presentes', name: 'Presentes', icon: 'fas fa-gift', color: 'category-outros' },
+            { id: 'casa', name: 'Casa', icon: 'fas fa-home', color: 'category-outros' },
+            { id: 'eletronicos', name: 'Eletrônicos', icon: 'fas fa-laptop', color: 'category-outros' },
+            { id: 'outros', name: 'Outros', icon: 'fas fa-ellipsis-h', color: 'category-outros' }
+        ];
+        
+        // Inicializar o armazenamento local
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        
+        // Elementos DOM
+        const amountInput = document.getElementById('amount');
+        const descriptionInput = document.getElementById('description');
+        const categorySelector = document.getElementById('categorySelector');
+        const categorySelect = document.getElementById('categorySelect');
+        const addExpenseBtn = document.getElementById('addExpense');
+        const expensesList = document.getElementById('expensesList');
+        const totalExpensesEl = document.getElementById('totalExpenses');
+        const expensesCountEl = document.getElementById('expensesCount');
+        const avgExpenseEl = document.getElementById('avgExpense');
+        const categorySummary = document.getElementById('categorySummary');
+        const clearDataBtn = document.getElementById('clearData');
+        const exportDataBtn = document.getElementById('exportData');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
+        
+        // Inicializar categorias no seletor
+        function initializeCategorySelector() {
+            categorySelector.innerHTML = '';
+            
+            categories.forEach(category => {
+                // Criar opção para o seletor visual
+                const categoryOption = document.createElement('div');
+                categoryOption.className = 'category-option';
+                categoryOption.dataset.id = category.id;
+                categoryOption.innerHTML = `
+                    <i class="${category.icon}"></i>
+                    <div>${category.name}</div>
+                `;
+                
+                categoryOption.addEventListener('click', () => {
+                    // Remover a seleção de todas as opções
+                    document.querySelectorAll('.category-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Selecionar a opção clicada
+                    categoryOption.classList.add('selected');
+                });
+                
+                categorySelector.appendChild(categoryOption);
+                
+                // Criar opção para o select (fallback)
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
+            
+            // Selecionar a primeira categoria por padrão
+            if (categorySelector.firstChild) {
+                categorySelector.firstChild.classList.add('selected');
+            }
+        }
+        
+        // Obter categoria selecionada
+        function getSelectedCategory() {
+            const selectedOption = document.querySelector('.category-option.selected');
+            if (selectedOption) {
+                return selectedOption.dataset.id;
+            }
+            return categorySelect.value || 'outros';
+        }
+        
+        // Formatar valor em reais
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+        
+        // Formatar data
+        function formatDate(date) {
+            return new Intl.DateTimeFormat('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(date);
+        }
+        
+        // Mostrar notificação
+        function showNotification(message, isError = false) {
+            notificationText.textContent = message;
+            notification.style.backgroundColor = isError ? 'var(--danger-color)' : 'var(--accent-color)';
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Adicionar um novo gasto
+        function addExpense() {
+            const amount = parseFloat(amountInput.value);
+            const description = descriptionInput.value.trim();
+            const categoryId = getSelectedCategory();
+            
+            // Validações
+            if (!amount || amount <= 0) {
+                showNotification('Por favor, insira um valor válido', true);
+                amountInput.focus();
+                return;
+            }
+            
+            const category = categories.find(cat => cat.id === categoryId) || categories.find(cat => cat.id === 'outros');
+            
+            // Criar objeto do gasto
+            const expense = {
+                id: Date.now(),
+                amount,
+                description: description || category.name,
+                category: categoryId,
+                date: new Date().toISOString()
+            };
+            
+            // Adicionar ao array
+            expenses.unshift(expense);
+            
+            // Atualizar o armazenamento local
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+            
+            // Atualizar a interface
+            updateUI();
+            
+            // Limpar formulário
+            amountInput.value = '';
+            descriptionInput.value = '';
+            
+            // Mostrar notificação
+            showNotification('Gasto adicionado com sucesso!');
+        }
+        
+        // Remover um gasto
+        function removeExpense(id) {
+            if (confirm('Tem certeza que deseja remover este gasto?')) {
+                expenses = expenses.filter(expense => expense.id !== id);
+                localStorage.setItem('expenses', JSON.stringify(expenses));
+                updateUI();
+                showNotification('Gasto removido com sucesso!');
+            }
+        }
+        
+        // Atualizar a lista de gastos
+        function updateExpensesList() {
+            if (expenses.length === 0) {
+                expensesList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <p>Nenhum gasto registrado ainda</p>
+                        <p>Adicione seu primeiro gasto usando o formulário ao lado</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            expensesList.innerHTML = '';
+            
+            expenses.forEach(expense => {
+                const category = categories.find(cat => cat.id === expense.category) || categories.find(cat => cat.id === 'outros');
+                
+                const expenseItem = document.createElement('div');
+                expenseItem.className = 'expense-item';
+                expenseItem.innerHTML = `
+                    <div class="expense-info">
+                        <div class="expense-category">
+                            <span class="category-tag ${category.color}">
+                                <i class="${category.icon}"></i> ${category.name}
+                            </span>
+                        </div>
+                        <div class="expense-description">${expense.description}</div>
+                        <div class="expense-date">${formatDate(new Date(expense.date))}</div>
+                    </div>
+                    <div class="expense-amount">${formatCurrency(expense.amount)}</div>
+                    <button class="delete-btn" data-id="${expense.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                expensesList.appendChild(expenseItem);
+            });
+            
+            // Adicionar eventos de clique para os botões de exclusão
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.dataset.id);
+                    removeExpense(id);
+                });
+            });
+        }
+        
+        // Atualizar estatísticas
+        function updateStatistics() {
+            const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            const count = expenses.length;
+            const average = count > 0 ? total / count : 0;
+            
+            totalExpensesEl.textContent = formatCurrency(total);
+            expensesCountEl.textContent = count;
+            avgExpenseEl.textContent = formatCurrency(average);
+        }
+        
+        // Atualizar resumo por categoria
+        function updateCategorySummary() {
+            if (expenses.length === 0) {
+                categorySummary.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-chart-pie"></i>
+                        <p>Adicione gastos para ver o resumo por categoria</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Calcular totais por categoria
+            const categoryTotals = {};
+            expenses.forEach(expense => {
+                if (!categoryTotals[expense.category]) {
+                    categoryTotals[expense.category] = 0;
+                }
+                categoryTotals[expense.category] += expense.amount;
+            });
+            
+            // Ordenar por valor (do maior para o menor)
+            const sortedCategories = Object.keys(categoryTotals).sort((a, b) => categoryTotals[b] - categoryTotals[a]);
+            
+            // Criar HTML do resumo
+            let html = '';
+            sortedCategories.forEach(categoryId => {
+                const category = categories.find(cat => cat.id === categoryId) || categories.find(cat => cat.id === 'outros');
+                const total = categoryTotals[categoryId];
+                const percentage = (total / expenses.reduce((sum, exp) => sum + exp.amount, 0)) * 100;
+                
+                html += `
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>
+                                <i class="${category.icon}"></i> 
+                                <strong>${category.name}</strong>
+                            </span>
+                            <span>${formatCurrency(total)}</span>
+                        </div>
+                        <div style="background-color: #e9ecef; height: 8px; border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background-color: var(--accent-color);"></div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.8rem; color: var(--gray-color); margin-top: 3px;">
+                            ${percentage.toFixed(1)}%
+                        </div>
+                    </div>
+                `;
+            });
+            
+            categorySummary.innerHTML = html;
+        }
+        
+        // Limpar todos os dados
+        function clearAllData() {
+            if (expenses.length === 0) {
+                showNotification('Não há dados para limpar', true);
+                return;
+            }
+            
+            if (confirm('Tem certeza que deseja apagar todos os gastos registrados? Esta ação não pode ser desfeita.')) {
+                expenses = [];
+                localStorage.removeItem('expenses');
+                updateUI();
+                showNotification('Todos os dados foram removidos');
+            }
+        }
+        
+        // Exportar dados para Excel
+        function exportToExcel() {
+            if (expenses.length === 0) {
+                showNotification('Não há dados para exportar', true);
+                return;
+            }
+            
+            // Preparar dados para a planilha
+            const data = expenses.map(expense => {
+                const category = categories.find(cat => cat.id === expense.category) || categories.find(cat => cat.id === 'outros');
+                return {
+                    'Data': formatDate(new Date(expense.date)),
+                    'Categoria': category.name,
+                    'Descrição': expense.description,
+                    'Valor (R$)': expense.amount,
+                    'ID': expense.id
+                };
+            });
+            
+            // Adicionar linha de total
+            const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            data.push({
+                'Data': '',
+                'Categoria': 'TOTAL',
+                'Descrição': '',
+                'Valor (R$)': total,
+                'ID': ''
+            });
+            
+            // Criar planilha
+            const worksheet = XLSX.utils.json_to_sheet(data.slice(0, -1)); // Excluir a linha de total da planilha principal
+            const totalRow = XLSX.utils.json_to_sheet([data[data.length - 1]], {skipHeader: true});
+            
+            // Adicionar a linha de total
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            const totalRowNum = range.e.r + 2;
+            XLSX.utils.sheet_add_json(worksheet, [data[data.length - 1]], {
+                skipHeader: true,
+                origin: `A${totalRowNum}`
+            });
+            
+            // Formatar a linha de total
+            worksheet[`E${totalRowNum}`].s = {font: {bold: true}};
+            
+            // Criar livro de trabalho
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Gastos');
+            
+            // Gerar arquivo
+            const fileName = `gastos_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+            
+            showNotification('Dados exportados com sucesso!');
+        }
+        
+        // Atualizar toda a interface
+        function updateUI() {
+            updateExpensesList();
+            updateStatistics();
+            updateCategorySummary();
+        }
+        
+        // Inicializar a aplicação
+        function initializeApp() {
+            initializeCategorySelector();
+            updateUI();
+            
+            // Event Listeners
+            addExpenseBtn.addEventListener('click', addExpense);
+            
+            amountInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addExpense();
+                }
+            });
+            
+            clearDataBtn.addEventListener('click', clearAllData);
+            exportDataBtn.addEventListener('click', exportToExcel);
+            
+            // Verificar se é a primeira visita
+            const firstVisit = !localStorage.getItem('expenses');
+            if (firstVisit) {
+                // Adicionar alguns gastos de exemplo
+                const exampleExpenses = [
+                    { id: 1, amount: 10.00, description: 'Coxinha no mercado', category: 'lanche', date: new Date(Date.now() - 86400000).toISOString() },
+                    { id: 2, amount: 150.00, description: 'Compras do mês', category: 'supermercado', date: new Date(Date.now() - 172800000).toISOString() },
+                    { id: 3, amount: 35.00, description: 'Uber para o trabalho', category: 'uber', date: new Date(Date.now() - 259200000).toISOString() }
+                ];
+                
+                localStorage.setItem('expenses', JSON.stringify(exampleExpenses));
+                expenses = exampleExpenses;
+                updateUI();
+                
+                showNotification('Bem-vindo! Adicionamos alguns gastos de exemplo para você conhecer o sistema.');
+            }
+        }
+        
+        // Inicializar quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
